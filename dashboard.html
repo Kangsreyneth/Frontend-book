@@ -131,11 +131,11 @@
       <span>LibraryBook</span>
     </h2>
     <ul>
-      <li><a href="dashboard.html" class="sidebar-link active"><i class="bi bi-house-door-fill"></i> Dashboard</a></li>
-      <li><a href="Members.html" class="sidebar-link"><i class="bi bi-people-fill"></i> Members</a></li>
-      <li><a href="borrows.html" class="sidebar-link"><i class="bi bi-bar-chart-fill"></i> Borrow & Return</a></li>
-      <li><a href="Report.html" class="sidebar-link"><i class="bi bi-exclamation-triangle-fill"></i> Reports</a></li>
-      <li><a href="About.html" class="sidebar-link"><i class="bi bi-info-circle-fill"></i> About Us</a></li>
+      <li><a href="dashboard.html" class="sidebar-link active"><i class="bi bi-house-door-fill"></i>Home</a></li>
+      <li><a href="Members.html" class="sidebar-link"><i class="bi bi-people-fill"></i>Members</a></li>
+      <li><a href="borrows.html" class="sidebar-link"><i class="bi bi-bar-chart-fill"></i>Borrow & Return</a></li>
+      <li><a href="Report.html" class="sidebar-link"><i class="bi bi-exclamation-triangle-fill"></i>Reports</a></li>
+      <li><a href="About.html" class="sidebar-link"><i class="bi bi-info-circle-fill"></i>About Us</a></li>
     </ul>
   </div>
   <button class="logout-btn" data-bs-toggle="modal" data-bs-target="#logoutModal">
@@ -313,9 +313,9 @@
       </div>
       <div class="modal-footer justify-content-center">
         <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancel</button>
-        <form action="register.html">
+        <!-- <form action="register.html">
           <button type="submit" class="btn btn-danger px-4">Logout</button>
-        </form>
+        </form> -->
       </div>
     </div>
   </div>
@@ -378,7 +378,7 @@ $(document).ready(function () {
       },
       error: function (xhr) {
         console.error("Fetch error:", xhr.responseText);
-        alert("❌ Failed to load books. Please check your connection or token.");
+        // alert("❌ Failed to load books. Please check your connection or token.");
       },
     });
   }
@@ -437,14 +437,14 @@ $(document).ready(function () {
       processData: false,
       success: function (newBook) {
         books.push(newBook);
-        renderBooks();
+         fetchBooks();
         addModal.hide();
         $("#addBookForm")[0].reset();
-        alert("✅ Book added successfully!");
+        // alert("✅ Book added successfully!");
       },
       error: function (xhr) {
         console.error(xhr.responseText);
-        alert("❌ Failed to add book. Please check input.");
+        // alert("❌ Failed to add book. Please check input.");
       },
     });
   });
@@ -508,13 +508,13 @@ $(document).ready(function () {
       success: function (updatedBook) {
         const index = books.findIndex((b) => b.id == id);
         if (index !== -1) books[index] = updatedBook;
-        renderBooks();
+        fetchBooks();
         editModal.hide();
-        alert("✅ Book updated successfully!");
+        // alert("✅ Book updated successfully!");
       },
       error: function (xhr) {
         console.error(xhr.responseText);
-        alert("❌ Failed to update book.");
+        // alert("❌ Failed to update book.");
       },
     });
   });
@@ -533,13 +533,13 @@ $(document).ready(function () {
       headers: { Authorization: "Bearer " + token },
       success: function () {
         books = books.filter((b) => b.id != deleteId);
-        renderBooks();
+        fetchBooks();
         deleteModal.hide();
         alert("🗑️ Book deleted successfully!");
       },
       error: function (xhr) {
         console.error(xhr.responseText);
-        alert("❌ Failed to delete book.");
+        // alert("❌ Failed to delete book.");
       },
     });
   });

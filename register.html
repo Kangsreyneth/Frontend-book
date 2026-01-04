@@ -87,10 +87,10 @@ $(document).ready(function(){
                 console.log('Success:', response);
                 if(response.token){
                     localStorage.setItem('token', response.token);
-                    alert('✅ Registration successful!');
-                    window.location.href = 'dashboard.html';
+                    // alert('✅ Registration successful!');
+                    window.location.href = 'index.html';
                 } else {
-                    alert('Registration succeeded but no token received!');
+                    // alert('Registration succeeded but no token received!');
                 }
             },
             error: function(xhr){
@@ -122,8 +122,8 @@ $(document).ready(function(){
                 if(response.token){
                     localStorage.setItem('token', response.token);
                     localStorage.setItem('user', JSON.stringify(response.user));
-                    alert('✅ Login successful!');
-                    window.location.href = 'dashboard.html';
+                    // alert('✅ Login successful!');
+                    window.location.href = 'index.html';
                 }
             },
             error: function(xhr){

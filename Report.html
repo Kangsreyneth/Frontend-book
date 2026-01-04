@@ -21,18 +21,17 @@
         <span>LibraryBook</span>
       </h2>
       <ul>
-        <li><a href="dashboard.html" class="sidebar-link"><i class="bi bi-house-door-fill"></i> 
-            <span>Dashboard</span></a></li>
+        <li><a href="dashboard.html" class="sidebar-link"><i class="bi bi-house-door-fill"></i><span>Home</span></a></li>
         <li><a href="Members.html" class="sidebar-link"><i class="bi bi-people-fill"></i> <span>Members</span></a></li>
         <li><a href="borrows.html" class="sidebar-link"><i class="bi bi-bar-chart-fill"></i> <span>Borrow & Return</span></a></li>
         <li><a href="Report.html" class="sidebar-link active"><i class="bi bi-exclamation-triangle-fill"></i> <span>Reports</span></a></li>
         <li><a href="About.html" class="sidebar-link"><i class="bi bi-info-circle-fill"></i> <span>About Us</span></a></li>
       </ul>
     </div>
-    <form action="register.html">
-      <button type="submit" class="btn btn-danger px-4">
-        <i class="bi bi-box-arrow-right"></i>Logout</button>
-    </form>
+    <button class="logout-btn" data-bs-toggle="modal" data-bs-target="#logoutModal">
+      <i class="bi bi-box-arrow-right"></i> Logout
+    </button>
+    
   </div>
     <!-- Topbar -->
   <div class="topbar">
@@ -187,49 +186,80 @@
 </div>
 
 </div>
-
+<div class="modal fade" id="logoutModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold">Confirm Logout</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body text-center text-danger fw-semibold fs-5">
+        ⚠️ Are you sure you want to logout?
+      </div>
+      <div class="modal-footer justify-content-center">
+        <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancel</button>
+        <form action="register.html">
+          <button type="submit" class="btn btn-danger px-4">Logout</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
   <!-- JS -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 <script>
 const API_URL = 'http://127.0.0.1:8000/api/report';
 const TOKEN = localStorage.getItem('token');
+
 $(document).ready(function() {
-    // Get token from localStorage
-    const token = localStorage.getItem('token');
-
-    if (!token) {
-        console.log('No token found, user not logged in.');
-        $('#currentUser').text('Guest');
-        return;
-    }
-
-    // Fetch user info from API
-    $.ajax({
-        url: 'http://127.0.0.1:8000/api/me',
-        type: 'GET',
-        headers: {
-            'Authorization': 'Bearer ' + token,
-            'Accept': 'application/json'
-        },
-        success: function(response) {
-            const user = response.user;
-            $('#currentUser').text(user.name || 'Unknown');
-            
-            // If your API provides avatar URL
-            if(user.avatar) {
-                $('#currentUserAvatar').attr('src', user.avatar);
-            }
-        },
-        error: function(xhr) {
-            console.error('Failed to fetch user:', xhr.responseJSON);
-            $('#currentUser').text('Guest');
-        }
-    });
+  // 🧍 Fetch current user
+  if (!TOKEN) {
+      console.log('No token found.');
+      $('#currentUser').text('Guest');
+  } else {
+      $.ajax({
+          url: 'http://127.0.0.1:8000/api/me',
+          type: 'GET',
+          headers: { 'Authorization': 'Bearer ' + TOKEN },
+          success: res => $('#currentUser').text(res.user?.name || 'Unknown'),
+          error: () => $('#currentUser').text('Guest')
+      });
+  }
 });
 
+// 🟩 Add New Report
+$('#reportForm').submit(function (e) {
+  e.preventDefault();
 
-// 🟨 Fetch all reports and render table using jQuery
+  const payload = {
+    report_month: $('input[name="reportMonth"]').val(),
+    total_borrowed: parseInt($('input[name="totalBorrowed"]').val()) || 0,
+    most_borrowed_book: $('input[name="mostBorrowedBook"]').val(),
+    most_active_member: $('input[name="mostActiveMember"]').val(),
+    late_returns: parseInt($('input[name="lateReturns"]').val()) || 0,
+    new_members: parseInt($('input[name="newMembers"]').val()) || 0
+  };
+
+  $.ajax({
+    url: API_URL,
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${TOKEN}`,
+      'Content-Type': 'application/json'
+    },
+    data: JSON.stringify(payload),
+    success: function () {
+      $('#reportForm')[0].reset();
+      fetchReports();
+    },
+    error: function (xhr) {
+      console.error('❌ Failed to add report:', xhr.responseJSON);
+    }
+  });
+});
+
+// 🟦 Fetch Reports
 function fetchReports() {
   $.ajax({
     url: API_URL,
@@ -240,14 +270,12 @@ function fetchReports() {
       renderRecords(reports);
     },
     error: function() {
-      $('#recordsTable tbody').html(`
-        <tr><td colspan="8" class="text-center text-danger">⚠️ Failed to load reports.</td></tr>
-      `);
+      $('#recordsTable tbody').html(`<tr><td colspan="8" class="text-center text-danger">⚠️ Failed to load reports.</td></tr>`);
     }
   });
 }
 
-// Render table rows
+// Render Table
 function renderRecords(records) {
   const $tbody = $('#recordsTable tbody');
   $tbody.empty();
@@ -261,12 +289,12 @@ function renderRecords(records) {
     $tbody.append(`
       <tr data-id="${r.id}">
         <td>#${r.id}</td>
-        <td>${r.report_month || ''}</td>
-        <td>${r.most_borrowed_book || ''}</td>
-        <td>${r.most_active_member || ''}</td>
-        <td>${r.total_borrowed || 0}</td>
-        <td>${r.late_returns || 0}</td>
-        <td>${r.new_members || 0}</td>
+        <td>${r.report_month}</td>
+        <td>${r.most_borrowed_book}</td>
+        <td>${r.most_active_member}</td>
+        <td>${r.total_borrowed}</td>
+        <td>${r.late_returns}</td>
+        <td>${r.new_members}</td>
         <td>
           <button class="btn btn-sm btn-warning me-2 text-white edit-btn"><i class="bi bi-pencil-square"></i> Edit</button>
           <button class="btn btn-sm btn-danger text-white delete-btn"><i class="bi bi-trash3"></i> Delete</button>
@@ -276,100 +304,64 @@ function renderRecords(records) {
   });
 }
 
-// ✏️ Open edit modal and populate form
+// ✏️ Edit
 $(document).on('click', '.edit-btn', function() {
   const $tr = $(this).closest('tr');
-
-  // Extract data from table cells
-  const id = $tr.data('id');
-  const reportMonth = $tr.find('td:eq(1)').text();
-  const mostBorrowed = $tr.find('td:eq(2)').text();
-  const mostActive = $tr.find('td:eq(3)').text();
-  const totalBorrowed = $tr.find('td:eq(4)').text();
-  const lateReturns = $tr.find('td:eq(5)').text();
-  const newMembers = $tr.find('td:eq(6)').text();
-
-  // Fill the modal
-  $('#edit_id').val(id);
-  $('#edit_report_month').val(reportMonth);
-  $('#edit_total_borrowed').val(totalBorrowed);
-  $('#edit_most_borrowed_book').val(mostBorrowed);
-  $('#edit_most_active_member').val(mostActive);
-  $('#edit_late_returns').val(lateReturns);
-  $('#edit_new_members').val(newMembers);
-
+  $('#edit_id').val($tr.data('id'));
+  $('#edit_report_month').val($tr.find('td:eq(1)').text());
+  $('#edit_most_borrowed_book').val($tr.find('td:eq(2)').text());
+  $('#edit_most_active_member').val($tr.find('td:eq(3)').text());
+  $('#edit_total_borrowed').val($tr.find('td:eq(4)').text());
+  $('#edit_late_returns').val($tr.find('td:eq(5)').text());
+  $('#edit_new_members').val($tr.find('td:eq(6)').text());
   new bootstrap.Modal($('#editModal')).show();
 });
 
-// 💾 Submit update
 $('#editForm').submit(function(e) {
   e.preventDefault();
   const id = $('#edit_id').val();
-
   const payload = {
     report_month: $('#edit_report_month').val(),
     total_borrowed: parseInt($('#edit_total_borrowed').val()) || 0,
-    most_borrowed_book: $('#edit_most_borrowed_book').val() || '',
-    most_active_member: $('#edit_most_active_member').val() || '',
+    most_borrowed_book: $('#edit_most_borrowed_book').val(),
+    most_active_member: $('#edit_most_active_member').val(),
     late_returns: parseInt($('#edit_late_returns').val()) || 0,
     new_members: parseInt($('#edit_new_members').val()) || 0
   };
+
   $.ajax({
     url: `${API_URL}/${id}`,
     method: 'PUT',
-    headers: { 
-      'Authorization': `Bearer ${TOKEN}`,
-      'Content-Type': 'application/json'
-    },
+    headers: { 'Authorization': `Bearer ${TOKEN}`, 'Content-Type': 'application/json' },
     data: JSON.stringify(payload),
-    success: function(data) {
-      const updatedReport = data.data ?? payload;
-
-      // Update table row
-      const $row = $(`#recordsTable tbody tr[data-id="${id}"]`);
-      $row.find('td:eq(1)').text(updatedReport.report_month || '');
-      $row.find('td:eq(2)').text(updatedReport.most_borrowed_book || '');
-      $row.find('td:eq(3)').text(updatedReport.most_active_member || '');
-      $row.find('td:eq(4)').text(updatedReport.total_borrowed || 0);
-      $row.find('td:eq(5)').text(updatedReport.late_returns || 0);
-      $row.find('td:eq(6)').text(updatedReport.new_members || 0);
-
-      alert('✅ Report updated successfully!');
+    success: function() {
       bootstrap.Modal.getInstance($('#editModal')[0]).hide();
-    },
-    error: function() {
-      alert('❌ Failed to update report.');
+      fetchReports();
     }
   });
 });
 
 // 🗑 Delete
 $(document).on('click', '.delete-btn', function() {
-  const $tr = $(this).closest('tr');
-  const id = $tr.data('id');
+  const id = $(this).closest('tr').data('id');
   $('#deleteReportId').val(id);
   new bootstrap.Modal($('#deleteReportModal')).show();
 });
 
 $('#confirmDeleteReportBtn').click(function() {
   const id = $('#deleteReportId').val();
-
   $.ajax({
     url: `${API_URL}/${id}`,
     method: 'DELETE',
     headers: { 'Authorization': `Bearer ${TOKEN}` },
     success: function() {
-      alert('✅ Report deleted successfully!');
       bootstrap.Modal.getInstance($('#deleteReportModal')[0]).hide();
       fetchReports();
-    },
-    error: function() {
-      alert('❌ Failed to delete report.');
     }
   });
 });
 
-// Load reports on page start
+// 🟧 Load on page start
 $(document).ready(function() {
   fetchReports();
 });
